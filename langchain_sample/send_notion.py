@@ -9,7 +9,9 @@ import whisper
 
 
 def sprit_limit_len(data, max_len=1500):
-    sentences = data.split("。")  # "。"で文章を分割する
+    sentences = data.split("\n")
+    if len(sentences) < 5:
+        sentences = data.split("。")  # "。"で文章を分割する
     result = []
     current_sentence = ""
 
