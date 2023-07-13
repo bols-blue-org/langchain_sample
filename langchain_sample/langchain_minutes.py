@@ -1,4 +1,5 @@
 # チャットモデルのラッパーをインポート
+import tiktoken
 from langchain.chat_models import ChatOpenAI
 
 # LLMChain をインポート
@@ -19,11 +20,26 @@ template = "あなたは優秀なドローンのエンジニアです."
 system_message_prompt = SystemMessagePromptTemplate.from_template(template)
 
 
-def split_toak(data):
+def read_file_and_limit_tokens(file_path, max_tokens=3500):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()  # ファイルを全文読み込む
 
-    human_template = "以降の会話の中から話題の切り替わる行数を教えてください「{text}」"
-    return
+    sentences = content.split("。")  # "。"で文章を分割する
+    result = []
+    current_sentence = ""
 
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+
+    for sentence in sentences:
+        tokens = encoding.encode(sentence)  # 文章をトークン化してトークン数を取得
+        if len(current_sentence) + len(tokens) <= max_tokens:
+            current_sentence += sentence + "。"  # 文章を現在の文字列に追加
+        else:
+            result.append(current_sentence.strip())  # 古い文字列を配列に追加
+            current_sentence = sentence + "。"  # 新しい文字列を開始
+    if current_sentence:
+        result.append(current_sentence.strip())  # 最後の文字列を配列に追加
+    return result
 
 def create_abstruct(data):
     # HumanMessage 用のテンプレートの作成
@@ -44,7 +60,7 @@ def create_abstruct(data):
 
     # LLM チェーンを実行
     completion = chain.run(text=data)
-    print(completion)
+    return completion
 
 
 def create_action_item(data):
@@ -66,4 +82,4 @@ def create_action_item(data):
 
     # LLM チェーンを実行
     completion = chain.run(text=data)
-    print(completion)
+    return completion
