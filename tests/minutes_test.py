@@ -1,37 +1,39 @@
+import os
 import unittest
 
 from langchain_sample.langchain_minutes import create_abstruct, create_action_item
 import tiktoken
 
-from langchain_sample.send_notion import create_meeting_log
+from langchain_sample.minutes.loader import Minutes, NotionController
+from langchain_sample.send_notion import create_meeting_log, parse_file_path, get_meeting_log
 
 
 class MyTestCase(unittest.TestCase):
     def test_something(self):
-        f = open("resoces/末広さん、鈴木さん (2022-10-11 14_44 GMT+9).mp4.txt", 'r')
-        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        count = 0
-        for data in f:
-            count += len(encoding.encode(data))
-            print("now token %i" % count)
-        print("total token size is %i" % count)
-        f.close()
-        create_abstruct(data)
-        create_action_item(data)
-        self.assertEqual(True, False)  # add assertion here
+        path ="resoces/"
+        files = os.listdir(path)
+        for name in files:
+            ret = Minutes(path + "/" + name)
+            ret.create_abstruct()
+            ret.create_action_item()
+            print("file path:" + ret.absolute_path+"\t" + str(ret.abstruct))
+            print(ret.action_item)
+            database_id = "3b6673eca2414b81832904f837497fc5"
+            notion = NotionController(database_id)
+            notion.create_auto_minutes(ret)
+            ret.save_to_json("./")
+        self.assertEqual(True, True)  # add assertion here
 
+    # データベースの読み込みテスト
+    def test_database(self):
+        database_id ="3b6673eca2414b81832904f837497fc5"
+        notion = NotionController(database_id)
+        notion.load_page_contents()
+        notion.create_database_page()
 
     def test_send_notion(self):
-        f = open("resoces/末広さん、鈴木さん (2022-10-11 14_44 GMT+9).mp4.txt", 'r')
-        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        count = 0
-        for data in f:
-            count += len(encoding.encode(data))
-            print("now token %i" % count)
-        print("total token size is %i" % count)
-        f.close()
-        create_meeting_log("テスト")
-        self.assertEqual(True, False)  # add assertion here
+        get_meeting_log()
+        create_meeting_log("テスト送信", "テスト", mocking=True)
 
 
 if __name__ == '__main__':

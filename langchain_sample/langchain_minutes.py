@@ -1,4 +1,5 @@
 # チャットモデルのラッパーをインポート
+import tiktoken
 from langchain.chat_models import ChatOpenAI
 
 # LLMChain をインポート
@@ -17,12 +18,6 @@ chat = ChatOpenAI(temperature=0.9)
 # SystemMessage 用のテンプレートの作成
 template = "あなたは優秀なドローンのエンジニアです."
 system_message_prompt = SystemMessagePromptTemplate.from_template(template)
-
-
-def split_toak(data):
-
-    human_template = "以降の会話の中から話題の切り替わる行数を教えてください「{text}」"
-    return
 
 
 def create_abstruct(data):
@@ -44,7 +39,7 @@ def create_abstruct(data):
 
     # LLM チェーンを実行
     completion = chain.run(text=data)
-    print(completion)
+    return completion
 
 
 def create_action_item(data):
@@ -66,4 +61,4 @@ def create_action_item(data):
 
     # LLM チェーンを実行
     completion = chain.run(text=data)
-    print(completion)
+    return completion
