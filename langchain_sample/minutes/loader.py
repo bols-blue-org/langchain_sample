@@ -194,7 +194,7 @@ class NotionController:
         return ret
 
     def split_action_item_text(self, minutes:Minutes):
-        ret = [self.create_("Todo")]
+        ret = [self.create_topic("Todo")]
         for tmp in minutes.action_item:
             ret.append(self.create_paragraph(tmp))
         return ret
