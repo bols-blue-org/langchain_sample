@@ -13,7 +13,7 @@ from langchain.prompts.chat import (
 )
 
 # チャットモデルのラッパーを初期化
-chat = ChatOpenAI(temperature=0.9)
+chat = ChatOpenAI(temperature=0.9, model="gpt-3.5-turbo-16k")
 
 # SystemMessage 用のテンプレートの作成
 template = "あなたは優秀なドローンのエンジニアです."

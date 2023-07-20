@@ -50,7 +50,7 @@ def convert_txt(file_path, dirname, whisper_model, mock=False, lang="ja"):
     basename = os.path.basename(file_path)
     print(file_path)
     output_file = f"{dirname}/{basename}.txt"
-    if mock == True:
+    if mock:
         return
     is_file = os.path.isfile(output_file)
     if is_file:
