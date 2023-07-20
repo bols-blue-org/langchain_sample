@@ -50,7 +50,7 @@ class Minutes(FilePath):
             for data in self.split_from_token:
                 self.action_item.append(create_action_item(data))
 
-    def contents_split_limit_tokens(self, content, max_tokens=3500):
+    def contents_split_limit_tokens(self, content, max_tokens=2800):
         sentences = content.split("。")  # "。"で文章を分割する
         result = []
         current_sentence = ""
@@ -68,11 +68,11 @@ class Minutes(FilePath):
             result.append(current_sentence.strip())  # 最後の文字列を配列に追加
         return result
 
-    def __init__(self, path):
+    def __init__(self, path, max_tokens=2800):
         super(Minutes, self).__init__(path)
         with open(self.absolute_path, 'r', encoding='utf-8') as file:
             self.content = file.read()
-            self.split_from_token = self.contents_split_limit_tokens(self.content)
+            self.split_from_token = self.contents_split_limit_tokens(self.content, max_tokens=max_tokens)
             self.abstruct = []
             self.action_item = []
 
