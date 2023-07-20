@@ -66,13 +66,14 @@ class Minutes(FilePath):
                 current_sentence = sentence + "。"  # 新しい文字列を開始
         if current_sentence:
             result.append(current_sentence.strip())  # 最後の文字列を配列に追加
+        self.split_from_token = result
         return result
 
-    def __init__(self, path, max_tokens=2800):
+    def __init__(self, path):
         super(Minutes, self).__init__(path)
         with open(self.absolute_path, 'r', encoding='utf-8') as file:
             self.content = file.read()
-            self.split_from_token = self.contents_split_limit_tokens(self.content, max_tokens=max_tokens)
+            self.split_from_token = []
             self.abstruct = []
             self.action_item = []
 
