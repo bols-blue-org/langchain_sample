@@ -10,16 +10,20 @@ import whisper
 
 def sprit_limit_len(data, max_len=1500):
     sentences = data.split("\n")
-    if len(sentences) < 5:
-        sentences = data.split("。")  # "。"で文章を分割する
+    split_string = "\n"
     result = []
+    if len(sentences) < 5:
+        # "。"で文章を分割する
+        sentences = re.split('[。 ]', data)
+        split_string = "\n"
     current_sentence = ""
 
     for sentence in sentences:
         tokens = sentence  # 文章をトークン化してトークン数を取得
         if len(current_sentence) + len(tokens) <= max_len:
-            current_sentence += sentence + "。"  # 文章を現在の文字列に追加
+            current_sentence += sentence + split_string  # 文章を現在の文字列に追加
         else:
+            print("create new string now len is " + str(len(current_sentence) + len(tokens)))
             result.append(current_sentence.strip())  # 古い文字列を配列に追加
             current_sentence = sentence + "。"  # 新しい文字列を開始
     if current_sentence:

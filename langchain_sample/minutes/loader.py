@@ -4,6 +4,8 @@ import os
 
 import tiktoken
 from notion_client import Client, APIResponseError, APIErrorCode
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 # ディレクトリ内のすべてのファイルに対して処理をするためのクラスを作成するユーティリティ関数
 from langchain_sample.langchain_minutes import create_abstruct, create_action_item
@@ -26,7 +28,7 @@ class FilePath:
 
     def save_to_json(self, dir_path):
         data = self.__dict__  # クラスのインスタンスの属性を辞書として取得
-        with open(os.path.join(dir_path, self.name+".json"), 'w') as file:
+        with open(os.path.join(dir_path, self.name + ".json"), 'w') as file:
             json.dump(data, file, ensure_ascii=False)
 
     @classmethod
@@ -81,7 +83,7 @@ class Minutes(FilePath):
 class NotionController:
     pages = ""
     paragraph = {"paragraph": {"rich_text": [{"text": {"content": "I'm a paragraph."}}]}}
-
+    page_id = ""
 
     def __init__(self, database_id):
         self.database_id = database_id
@@ -128,11 +130,12 @@ class NotionController:
                 # Other error handling code
                 logging.error(error)
 
-    def create_auto_minutes(self, minutes:Minutes,  database_id=None):
-        minutes.name
+    def create_auto_minutes(self, minutes: Minutes, database_id=None, set_raw_text=True):
         children = []
         children.extend(self.split_topic_text(minutes))
-        children.extend(self.split_raw_text(minutes.content))
+        children.extend(self.split_action_item_text(minutes))
+        if set_raw_text:
+            children.extend(self.split_raw_text(minutes.content))
         if database_id is None:
             database_id = self.database_id
         try:
@@ -144,42 +147,44 @@ class NotionController:
                 icon={"type": "emoji", "emoji": "🤠"},
                 children=children,
             )
+            print(response)
+            self.page_id = response["id"].replace("-", "")
         except APIResponseError as error:
             if error.code == APIErrorCode.ObjectNotFound:
-                ...  # For example: handle by asking the user to select a different database
+                pass  # For example: handle by asking the user to select a different database
             else:
                 # Other error handling code
                 logging.error(error)
 
     def create_paragraph(self, text):
         return {
-                "object": 'block',
-                "type": 'paragraph',
-                "paragraph": {
-                    "rich_text": [
-                        {
-                            "text": {
-                                "content": text
-                            }
+            "object": 'block',
+            "type": 'paragraph',
+            "paragraph": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": text
                         }
-                    ],
-                }
+                    }
+                ],
             }
+        }
 
     def create_topic(self, text):
         return {
-                "object": 'block',
-                "type": 'heading_1',
-                "heading_1": {
-                    "rich_text": [
-                        {
-                            "text": {
-                                "content": text
-                            }
+            "object": 'block',
+            "type": 'heading_1',
+            "heading_1": {
+                "rich_text": [
+                    {
+                        "text": {
+                            "content": text
                         }
-                    ],
-                }
+                    }
+                ],
             }
+        }
 
     def split_raw_text(self, content):
         splited_text = sprit_limit_len(content)
@@ -188,14 +193,35 @@ class NotionController:
             ret.append(self.create_paragraph(tmp))
         return ret
 
-    def split_topic_text(self, minutes:Minutes):
+    def split_topic_text(self, minutes: Minutes):
         ret = [self.create_topic("Topics!!!")]
         for tmp in minutes.abstruct:
             ret.append(self.create_topic(tmp))
         return ret
 
-    def split_action_item_text(self, minutes:Minutes):
+    def split_action_item_text(self, minutes: Minutes):
         ret = [self.create_topic("Todo")]
         for tmp in minutes.action_item:
             ret.append(self.create_paragraph(tmp))
         return ret
+
+
+class Slack:
+    def __init__(self, channel="C05HGU3A4H4"):
+        self.channel_id = channel
+        slack_token = os.environ["SLACK_BOT_TOKEN"]
+        if slack_token == "":
+            raise Exception("SLACK_BOT_TOKEN is" + slack_token)
+        self.client = WebClient(slack_token)
+
+    def send_slack_message(self, msg):
+        try:
+            print("test")
+            response = self.client.chat_postMessage(
+                channel=self.channel_id,
+                text=msg + ":tada:"
+            )
+            print(response)
+        except SlackApiError as e:
+            # You will get a SlackApiError if "ok" is False
+            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
